@@ -34,11 +34,6 @@ recent backup.  Then robocopy is used to compare the new backup with the
 backup directories.  Any changed files will be copied to the new backup.
 Otherwise, the files will be left untouched.
 
-The script also makes sure that you don't make too many backups.  You 
-can specify the number of backups to keep in the FOR... line (i.e. 
-skip=N).  Then whenever you run the script, it will keeep the most 
-recent N backups that you specify and delete the old ones.
-
 Run backup.bat automatically
 ----------------------------
 
@@ -60,8 +55,8 @@ Windows using any tools you like to use.
 How could this get any better?
 ==============================
 
-You can't make volume shadow copies as a non-admin on Windows.  Since we
-use UPMC computers, we don't have admin accounts.  Shadow copies allow
+You can't make volume shadow copies as a non-admin on Windows.  I don't
+have an admin account on my work computer.  Shadow copies allow
 robocopy to copy files that are open by other programs.  If you could
 incorporate the use of volume shadow copies in the script, it would be
 better.
