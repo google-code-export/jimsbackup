@@ -1,0 +1,18 @@
+usage:  backup backup-root backup-map-path
+
+example:  backup U:\BACKUP\C U:\BACKUP\C\backup-map.txt
+
+
+Backup-map file syntax
+======================
+
+The backup-map file contains a list of backup source directories and 
+destination directories separated by bars (|).  The destination 
+directories are relative to the backup-root.  Source directories are
+absolute paths.
+
+example:
+
+  C:\web|web
+  C:\temp|temp
+  D:\data|data

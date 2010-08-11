@@ -1,0 +1,6 @@
+latest.txt
+README.TXT.bak
+readme.html
+
+syntax: glob
+*\dist\*
