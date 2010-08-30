@@ -1,6 +1,8 @@
 latest.txt
-README.TXT.bak
 readme.html
 
 syntax: glob
 *\dist\*
+
+# notepad++ backup files
+*.bak

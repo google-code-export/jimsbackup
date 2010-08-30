@@ -1,6 +1,12 @@
-usage:  backup backup-root backup-map-path
+usage:  backup backup-root backup-map-path [number-to-keep]
 
-example:  backup U:\BACKUP\C U:\BACKUP\C\backup-map.txt
+arguments:
+backup-root       directory location to store backups
+backup-map-path   location of backup-map file
+number-to-keep    keeps the most recent backups (deletes the rest)
+
+examples:  backup U:\BACKUP\C U:\BACKUP\C\backup-map.txt
+           backup U:\BACKUP\C U:\BACKUP\C\backup-map.txt 20
 
 
 Backup-map file syntax
