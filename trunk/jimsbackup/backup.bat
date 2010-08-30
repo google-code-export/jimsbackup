@@ -1,21 +1,29 @@
 @ECHO OFF
 SETLOCAL ENABLEDELAYEDEXPANSION
 
-:: Set the scriptdir variable to the directory where this script is 
-:: located with a trailing slash
-SET scriptdir=%~dp0
-
-SET rootdir=%~dp1
-
-SET mappath=%~f2
-
-SET bkfolder=bk-%date:~6,4%%date:~0,2%%date:~3,2%%time:~0,2%%time:~3,2%%time:~6,2%
-
 IF [%1]==[] (
 :: No parameters provided -- display usage.
 TYPE "%scriptdir%usage.txt"
 GOTO:eof
 )
+
+:: Set the scriptdir variable to the directory where this script is 
+:: located with a trailing slash
+SET scriptdir=%~dp0
+
+SET rootdir=%~f1
+:: Make sure rootdir ends in a slash (\)
+IF NOT %rootdir:~-1% == \ (
+SET rootdir=%rootdir%\
+)
+:: Make sure rootdir exists
+IF NOT EXIST %rootdir% (
+MKDIR %rootdir%
+)
+
+SET mappath=%~f2
+
+SET bkfolder=bk-%date:~6,4%%date:~0,2%%date:~3,2%%time:~0,2%%time:~3,2%%time:~6,2%
 
 DEL /F /Q "%rootdir%backup.log"
 
