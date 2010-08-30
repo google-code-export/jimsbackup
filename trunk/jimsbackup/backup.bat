@@ -52,6 +52,6 @@ GOTO:eof
  MKDIR %2>>"%rootdir%backup.log"
  @ECHO ln.exe Starting @ !date! !time!>>"%rootdir%backup.log"
  @ECHO "%scriptdir%..\bin\ln" -r %1 %2^>^>"%rootdir%backup.log">>"%rootdir%backup.log"
- "ln.exe" -r %1 %2>>"%rootdir%backup.log"
+ ln.exe -r %1 %2>>"%rootdir%backup.log"
  @ECHO ln.exe Finished !date! !time!>>"%rootdir%backup.log"
  GOTO:eof
