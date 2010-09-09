@@ -1,0 +1,5 @@
+backup root source
+backup root --map=backup-map
+backup root --map=backup-map --keep=20 --folder-pattern=bkp-%Y%m%d%H%M%S
+
+--folder-pattern uses format codes from datetime.strftime

@@ -1,0 +1,22 @@
+===============
+JimsBackup Bugs
+===============
+
+This is the bug history of JimsBackup sorted by version.
+
+jimsbackup-0.1c2
+================
+
+0.1c2:1
+-------
+When you remove a directory from the backup map, the directory (and all files
+that it contains) still shows up in new backups.  
+
+This happens because hardlinks are created by ln.exe from the past version 
+before robocopy runs.
+
+I think one solution would be to change the way hard links are created.  Instead
+of doing one call to ln.exe for the whole backup directory, loop over the 
+''destination directories'' in the backup map and create hardlinks only for
+these directories.  I assume that ones that do not exist will fail (as 
+expected), but the backup process should continue successfully.
