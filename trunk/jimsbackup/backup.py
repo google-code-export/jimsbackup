@@ -99,6 +99,7 @@ if __name__ == '__main__':
     # make sure there are no errors in number/kind of inputs
     if len(args) == 0:
         parser.print_help()
+        sys.exit(0)
     elif len(args) == 1:
         if not options.map_file:
             raise Exception('Source path or map path not specified!')
