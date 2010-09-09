@@ -3,6 +3,8 @@ readme.html
 
 syntax: glob
 *\dist\*
+*\build\*
 
 # notepad++ backup files
 *.bak
+*.pyc
