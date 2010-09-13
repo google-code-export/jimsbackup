@@ -1,7 +1,8 @@
 from optparse import OptionParser
 import sys, os
 from datetime import datetime
-##import shutil
+import shutil
+import fnmatch
 import subprocess
 
 from hardlink import hardlink
@@ -37,9 +38,20 @@ def main(root, bmap, history_length=None):
     with open(os.path.join(root, 'latest.txt'), 'wt') as f:
         f.write(os.path.split(thisbackup)[1] + '\n')
 
+    if history_length:
+        for bkFolderName in sorted(list_bkFolders(root))[:-history_length]:
+            print 'Deleting {0}!'.format(os.path.join(root, bkFolderName))
+            shutil.rmtree(os.path.join(root, bkFolderName))
+        
+
     # if errors:
         # raise shutil.Error, errors
-        
+
+def list_bkFolders(root):
+    return [f for f in os.listdir(root)
+                  if os.path.isdir(os.path.join(root, f)) and
+                     fnmatch.fnmatch(f, 'bkp-*')]
+
 def robocopy_mirror(src, dest):
     p = subprocess.Popen(['robocopy',
                           src,
@@ -60,12 +72,13 @@ def xcopy_mirror(src, dest):
         p = subprocess.Popen(['xcopy',
                               src,
                               dest,
-                              '/V',
-                              '/H',
-                              '/R',
-                              '/K',
-                              '/Y',
-                              '/Z'],
+                              '/V',  #Verifies new files
+                              '/H',  #Copies hidden and system files
+                              '/R',  #Overwrites read-only files
+                              '/K',  #Copies attributes
+                              '/Y',  #Suppress overwrite prompting
+                              '/Z', #Copies networked files in restartable mode
+                              ],
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
