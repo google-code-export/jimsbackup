@@ -1,7 +1,8 @@
 ln.exe from http://schinagl.priv.at/nt/ln/ln.html
 
-todo:
-
- - make it easier to specify backup sources and destinations.
- - maybe make a self-extracting archive instead of a zip file for distribution.
- - automate version numbering
+Requirements:
+ * ln.exe
+   * requires Microsoft Windows NT 4.0, 2000, or XP
+   * NTFS-formatted drive
+ * robocopy.exe
+   * requires Microsoft Windows XP, or Server 2003
