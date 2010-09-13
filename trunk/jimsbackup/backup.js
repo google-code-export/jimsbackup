@@ -1,5 +1,60 @@
+/* JimsBackup
+
+   To view usage, run:  cscript backup.js
+	 
+   Requirements:
+     * Microsoft Windows XP
+	 * NTFS-formatted drive for backup root
+     * robocopy.exe (Windows Server 2003 Resource Kit Tools)
+	 * ln.exe (http://schinagl.priv.at/nt/ln/ln.html)
+*/
+
+/* Copyright (c) 2010, James Cook, University of Pittsburgh
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without 
+   modification, are permitted provided that the following conditions are met:
+
+       * Redistributions of source code must retain the above copyright notice,
+		 this list of conditions and the following disclaimer.
+       * Redistributions in binary form must reproduce the above copyright 
+	     notice, this list of conditions and the following disclaimer in the 
+		 documentation and/or other materials provided with the distribution.
+       * Neither the name of the University of Pittsburgh nor the names of its 
+	     contributors may be used to endorse or promote products derived from 
+		 this software without specific prior written permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+   ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+   POSSIBILITY OF SUCH DAMAGE.
+*/
+
+var opts = WScript.Arguments.Named;
+var args = WScript.Arguments.Unnamed;
+var fso = new ActiveXObject('Scripting.FileSystemObject');
+var wshShell = WScript.CreateObject('WScript.Shell');
+
+// temporary variables
+var cmd; // used for running shell commands
+var rtn; // used to hold value returned from shell command
+var msg; // used for creating messages to echo
+var tmp; // general purpose temporary variable
+var f; // general purpose temporary file object
+
+// constants used by the OpenTextFile method of the FileSystemObject
+var ForReading = 1;
+var ForWriting = 2;
+
 var name = 'JimsBackup';
-var version;
+var version = '';
 var versionFileName;
 var versionFile;
 var consoleWidth = 80; // number of chars in width of console window
@@ -16,26 +71,22 @@ var linkDest;
 var ts = new Date(); // start time (date object)
 var srcPath; // source file/directory of a backup operation
 var destPath; // destination of a backup operation relative to bkFolderPath
-
-// constants used by the OpenTextFile method of the FileSystemObject
-var ForReading = 1;
-var ForWriting = 2;
-
-// temporary variables
-var cmd; // used for running shell commands
-var rtn; // used to hold value returned from shell command
-var msg; // used for creating messages to echo
-var tmp; // general purpose temporary variable
-var f; // general purpose temporary file object
-
-var args = WScript.Arguments;
-var fso = new ActiveXObject('Scripting.FileSystemObject');
 var scriptFolderName = fso.GetParentFolderName(WScript.ScriptFullName);
-var wshShell = WScript.CreateObject('WScript.Shell');
+var verbose;
+if (opts.Exists('verbose'))
+	verbose = true;
+else
+	verbose = false;
 
-if (args.length < 2)
+if (!IsHostCscript())
 {
-	WScript.Echo('Need at least two arguments!  Usage information here!');
+	msg = 'Please run this script using CScript.\n';
+	msg += 'This can be achieved by\n';
+	msg += '1. Using "CScript script.vbs arguments" or\n';
+	msg += '2. Changing the default Windows Scripting Host to CScript\n';
+	msg += '   using "CScript //H:CScript //S" and running the script\n';
+	msg += '   "script.vbs arguments".';
+	WScript.Echo(msg);
 	WScript.Quit(1);
 }
 
@@ -45,15 +96,52 @@ if (fso.FileExists(versionFileName))
 	versionFile = fso.OpenTextFile(versionFileName, ForReading, false);
 	version = versionFile.ReadLine();
 	versionFile.close();
-	WScript.Echo(name + ' Version ' + version);
 }
-else
-	WScript.Echo(name);
 
+if (verbose)
+{
+	if (version == '')
+	{
+		WScript.Echo(name);
+		WScript.Echo(Date());
+		WScript.Echo();
+	}
+	else
+	{
+		WScript.Echo(name + ' ' + version);
+		WScript.Echo(Date());
+		WScript.Echo();
+	}
+}
+
+if (args.length < 2)
+{
+	ShowUsage()
+	WScript.Quit(1);
+}
+	
 rootFolderPath = fso.GetAbsolutePathName(args(0));
-WScript.Echo();
-WScript.Echo('Root Folder:  "' + rootFolderPath + '"');
+if (verbose)
+	WScript.Echo('Root Folder:  "' + rootFolderPath + '"');
 
+if (!fso.FolderExists(rootFolderPath))
+{
+	if (verbose)
+		WScript.Echo('  Root folder does not exist.  Creating it...');
+	cmd = 'cmd /c mkdir "' + rootFolderPath + '"';
+	rtn = wshShell.run(cmd, 0, true);
+	if (!fso.FolderExists(rootFolderPath))
+	{
+		WScript.Echo('  Error trying to create root folder!');
+		WScript.Quit(1);
+	}
+	else
+	{
+		if (verbose)
+			WScript.Echo('  Root folder created successfully.');
+	}
+}	
+	
 bkFolderName = 'bkp-';
 bkFolderName += ts.getYear();
 bkFolderName += ('0' + (ts.getMonth() + 1)).slice(-2);
@@ -63,63 +151,79 @@ bkFolderName += ('0' + ts.getMinutes()).slice(-2);
 bkFolderName += ('0' + ts.getSeconds()).slice(-2);
 
 bkFolderPath = fso.BuildPath(rootFolderPath, bkFolderName);
-WScript.Echo();
-WScript.Echo('Backup path:  "' + bkFolderPath + '"');
 
-if (!fso.FolderExists(rootFolderPath))
-{
-	WScript.Echo('Root folder does not exist.  Creating it...');
-	cmd = 'cmd /c mkdir "' + rootFolderPath + '"';
-	rtn = wshShell.run(cmd, 0, true);
-	if (!fso.FolderExists(rootFolderPath))
-	{
-		WScript.Echo('Error trying to create root folder!');
-		WScript.Quit(1);
-	}
-	else
-		WScript.Echo('Root folder created successfully.');
-}
+if (verbose)
+	WScript.Echo('Backup path:  "' + bkFolderPath + '"');
 
 latestFilePath = fso.BuildPath(rootFolderPath, "latest.txt");
 firstBackup = !fso.FileExists(latestFilePath);
-
 if (!firstBackup)
 {
-	WScript.Echo();
 	msg = 'Found latest.txt file at ';
 	msg += '"' + fso.BuildPath(rootFolderPath, "latest.txt") + '"';
 	msg += '. Reading most recent previous backup...';
-	WScript.Echo(msg);
+	if (verbose)
+		WScript.Echo(msg);
 	
 	latestFile = fso.OpenTextFile(latestFilePath, ForReading, false);
 	linkFolderPath = fso.BuildPath(rootFolderPath, latestFile.ReadLine());
 	latestFile.close()
-	WScript.Echo('Most recent previous backup:  "' + linkFolderPath + '"');
+	if (verbose)
+		WScript.Echo('  Most recent previous backup:  "' + linkFolderPath + '"');
 }
 else
 {
-	WScript.Echo()
-	WScript.Echo('latest.txt file not found.  This must be the first backup.');
+	if (verbose)
+		WScript.Echo('latest.txt file not found.  This must be the first backup.');
 }
 
 mapFilePath = fso.GetAbsolutePathName(args(1));
-WScript.Echo();
-WScript.Echo('Map path:  "' + mapFilePath + '"');
+if (verbose)
+	WScript.Echo('Map path:  "' + mapFilePath + '"');
+	
 if (!fso.FileExists(mapFilePath))
 {
 	WScript.Echo('Map file does not exist!');
 	WScript.Quit(1);
 }
 
+if (opts.Exists('keep'))
+{
+	if (isNaN(parseInt(opts('keep'))))
+	{
+		msg = 'Must assign an integer to KEEP option. ';
+		msg += opts('keep') + ' provided.'
+		WScript.Echo(msg)
+		WScript.Quit(1);
+	}
+	if (verbose)
+		WScript.Echo('Number of backups to keep:  ' + opts('keep'));
+}
+
+if (opts.Exists('verbose'))
+{
+	if (verbose)
+		WScript.Echo('Verbose option turned on.');
+}
+
+
+if (verbose)
+{
+	WScript.Echo();
+	WScript.Echo('Starting backup operations...');
+}
 mapFile = fso.OpenTextFile(mapFilePath, ForReading, false);
 while (!mapFile.AtEndOfStream)
 {
 	tmp = mapFile.ReadLine().split('|');
 	srcPath = tmp[0];
 	destPath = fso.BuildPath(bkFolderPath, tmp[1]);
-	WScript.Echo();
-	WScript.Echo('backup from: ' + srcPath);
-	WScript.Echo('backup to: ' + destPath);
+	if (verbose)
+	{
+		WScript.Echo();
+		WScript.Echo('backup from: ' + srcPath);
+		WScript.Echo('backup to: ' + destPath);
+	}
 	
 	if (!firstBackup)
 	{
@@ -130,8 +234,9 @@ while (!mapFile.AtEndOfStream)
 			msg += '"' + linkDest + '"';
 			msg += ' exists and is a folder -- recursively linking contents to ';
 			msg += '"' + linkDest + '"...';
-			WScript.Echo(msg);
-			link(linkDest, destPath, true);
+			if (verbose)
+				WScript.Echo(msg);
+			link(linkDest, destPath, true, verbose);
 		}
 		else if (fso.FileExists(linkDest))
 		{
@@ -139,14 +244,16 @@ while (!mapFile.AtEndOfStream)
 			msg += '"' + linkDest + '"';
 			msg += ' exists -- linking to ';
 			msg += '"' + linkDest + '"...';
-			WScript.Echo(msg);
-			link(linkDest, destPath);
+			if (verbose)
+				WScript.Echo(msg);
+			link(linkDest, destPath, false, verbose);
 		}
 		else
 		{
 			msg = '"' + linkDest + '"';
 			msg += ' does not exist -- no hard links will be created.';
-			WScript.Echo(msg);
+			if (verbose)
+				WScript.Echo(msg);
 		}
 	}
 	
@@ -156,8 +263,9 @@ while (!mapFile.AtEndOfStream)
 		msg += '"' + srcPath + '"';
 		msg += ' exists -- recursively synchronizing contents to ';
 		msg += '"' + destPath + '"...';
-		WScript.Echo(msg);
-		synchronize(srcPath, destPath);
+		if (verbose)
+			WScript.Echo(msg);
+		synchronize(srcPath, destPath, verbose);
 	}
 	else if (fso.FileExists(srcPath))
 	{
@@ -165,8 +273,9 @@ while (!mapFile.AtEndOfStream)
 		msg += '"' + srcPath + '"';
 		msg += ' exists -- synchronizing to ';
 		msg += '"' + destPath + '"...';
-		WScript.Echo(msg);
-		synchronize(srcPath, destPath);
+		if (verbose)
+			WScript.Echo(msg);
+		synchronize(srcPath, destPath, verbose);
 	}
 	else
 	{
@@ -178,47 +287,80 @@ while (!mapFile.AtEndOfStream)
 	
 }
 
-WScript.Echo();
-WScript.Echo('Finished backing up all files!');
-WScript.Echo(Date());
-
-// WScript.Echo();
-// WScript.Echo('Updated latest.txt to point to this backup...');
-// latestFile = fso.OpenTextFile(latestFilePath, ForWriting, true);
-// latestFile.WriteLine(bkFolderName);
-// latestFile.Close()
-
-if (args.length == 3)
+if (verbose)
 {
-	nKeep = args(2);
-	removeOldest(rootFolderPath, nKeep);	
+	WScript.Echo();
+	WScript.Echo('All backup operations completed.');
+	WScript.Echo(Date());
 }
 
+latestFile = fso.OpenTextFile(latestFilePath, ForWriting, true);
+latestFile.WriteLine(bkFolderName);
+latestFile.Close()
+if (verbose)
+{
+	WScript.Echo();
+	WScript.Echo('latest.txt updated.');
+}
+	
+if (opts.Exists('KEEP'))
+{
+	if (verbose)
+		WScript.Echo();
+	removeOldest(rootFolderPath, parseInt(opts('KEEP')), verbose);
+}
 
-
-function removeOldest(root, nKeep)
+function removeOldest(root, nKeep, verbose)
 {
 	var fso = new ActiveXObject('Scripting.FileSystemObject');
+	var folders = listBackups(root).sort();
+	var deleteFolders = folders.slice(0, folders.length-nKeep);
+	var keepFolders = folders.slice(folders.length-nKeep,folders.length);
+	var folderPath;
+	if (verbose)
+	{
+		WScript.Echo('Found ' + folders.length + ' backup folders.');
+		if (deleteFolders.length > 0)
+		{
+			WScript.Echo(deleteFolders.length + ' will be deleted:');
+			for (var i in deleteFolders)
+			{
+				WScript.Echo('  ' + deleteFolders[i]);
+			}
+		}
+		WScript.Echo(keepFolders.length + ' will be kept:');
+		for (var i in keepFolders)
+		{
+			WScript.Echo('  ' + keepFolders[i]);
+		}
+		if (deleteFolders.length > 0)
+			WScript.Echo('Removing old backups...');
+	}
+	for (var i in deleteFolders)
+	{
+		folderPath = fso.BuildPath(root, deleteFolders[i]);
+		fso.DeleteFolder(folderPath, true);
+		if (verbose)
+			WScript.Echo('  deleted "' + folderPath + '"');
+	}
+}
+
+function listBackups(root)
+{
 	var cmd;
-	cmd = 'cmd /c dir /a:d /b /o:-n ';
+	cmd = 'cmd /c dir /a:d /b ';
 	cmd += '"' + fso.BuildPath(root, 'bkp-*') + '"';
 	var oExec = wshShell.Exec(cmd);
-	var folderName, folderPath;
-	var count = 0;
+	var folders = new Array();
 	while (oExec.Status == 0)
 	{
 		WScript.Sleep(100);
 	}
 	while (!oExec.stdOut.AtEndOfStream)
 	{
-		folderName = oExec.stdOut.ReadLine();
-		count++;
-		if (count > nKeep)
-		{
-			folderPath = fso.BuildPath(root, folderName);
-			fso.DeleteFolder(folderPath, true);
-		}
+		folders.push(oExec.stdOut.ReadLine());
 	}
+	return folders;
 }
 
 function link(src, dest)
@@ -227,16 +369,23 @@ function link(src, dest)
 	//   src		existing file or folder to link from
 	//   dest		new file or folder
 	//   [recurse]  recurse sub-directories if src is a folder
+	//   [verbose]  display verbose output (default false)
 	
 	var fso = new ActiveXObject('Scripting.FileSystemObject');
 	var cmd = '';
 	var msg;
-	var recurse = false;
+	var recurse;
+	var verbose;
 	
-	if (arguments.length == 3)
+	if (arguments.length >= 4)
+		verbose = arguments[3];
+	else
+		verbose = false;
+	
+	if (arguments.length >= 3)
 		recurse = arguments[2];
-	
-	WScript.Echo('RECURSE = ' + recurse);
+	else
+		recurse = false;
 	
 	if (fso.FolderExists(src) & recurse)
 	{
@@ -258,15 +407,27 @@ function link(src, dest)
 		WScript.Echo(msg);
 		WScript.Quit(1);
 	}
-	runCommand(cmd)
+	runCommand(cmd, verbose)
 }
 
 function synchronize(src, dest)
 {
+	// Arguments:
+	//   src		existing file or folder to sync from
+	//   dest		new or existing file or folder to sync to
+	//   [verbose]  display verbose output (default false)
+	
 	var fso = new ActiveXObject('Scripting.FileSystemObject');
 	var wshShell = WScript.CreateObject('WScript.Shell');
 	var cmd;
 	var msg;
+	var tempResult;
+	var verbose;
+	
+	if (arguments.length == 3)
+		verbose = arguments[2];
+	else
+		verbose = false;
 	
 	var ForReading = 1;
 	
@@ -282,10 +443,16 @@ function synchronize(src, dest)
 		cmd += '"' + dest + '" ';
 		cmd += '/MIR /LOG:';
 		cmd += '"' + tempFilePath + '"';
-		runCommand(cmd);
+		runCommand(cmd, verbose);
 		tempFile = fso.OpenTextFile(tempFilePath, ForReading);
 		while (!tempFile.AtEndOfStream)
-			WScript.Echo(tempFile.ReadLine());
+		{
+			tempResult = tempFile.ReadLine()
+			if (verbose)
+			{
+				WScript.Echo('  ' + tempResult);
+			}
+		}
 		tempFile.close();
 	}
 	else if (fso.FileExists(src))
@@ -312,7 +479,14 @@ function synchronize(src, dest)
 			cmd += ' "' + src + '"';
 			cmd += ' "' + dest + '"';
 			cmd += ' /V /H /R /K /Y /Z';
-			runCommand(cmd)
+			runCommand(cmd, verbose)
+		}
+		else
+		{
+			if (verbose)
+			{
+				WScript.Echo('  Files appear to be the same -- no copy done.');
+			}
 		}
 	}
 	else
@@ -328,21 +502,38 @@ function synchronize(src, dest)
 
 function runCommand(cmd)
 {
-	// Wscript.Echo "Running command:"
-	// Wscript.Echo cmd
-	// Wscript.Echo
+	// Arguments:
+	//   cmd		shell command to run
+	//   [verbose]  display verbose output (default false)
+	
+	var verbose;
+	var tempResult = '';
+	if (arguments.length == 2)
+		verbose = arguments[1];
+	else
+		verbose = false;
+		
 	var wshShell = WScript.CreateObject('WScript.Shell');
+	if (verbose)
+	{
+		WScript.Echo('Running Command:');
+		WScript.Echo('  ' + cmd);
+	}
 	var oExec = wshShell.Exec(cmd);
-	// Dim WshShell, oExec
-	// Set WshShell = CreateObject("WScript.Shell")
-	// Set oExec = WshShell.Exec(cmd)
 
+	if (verbose)
+	{
+		WScript.Echo('Result:');
+	}
+	
 	while (oExec.Status == 0)
 	{
 		WScript.Sleep(100);
 		while (!oExec.stdOut.AtEndOfStream)
 		{
-			WScript.Echo(oExec.stdOut.ReadLine());
+			tempResult = oExec.stdOut.ReadLine();
+			if (verbose)
+				WScript.Echo('  ' + tempResult);
 		}
 	}
 	
@@ -351,16 +542,55 @@ function runCommand(cmd)
 		WScript.Echo('There was an error running the following command:');
 		WScript.Echo(cmd);
 	}
-	
-	// Do While oExec.Status = 0
-		 // WScript.Sleep 100
-		 // Do While oExec.stdOut.AtEndOfStream <> True
-			// Wscript.Echo oExec.stdOut.ReadLine
-		 // Loop
-	// Loop
+}
 
-	// If oExec.ExitCode <> 0 Then
-		// Wscript.Echo "There was an error running the following command."
-		// Wscript.Echo cmd
-	// End If
+function IsHostCscript()
+{
+	var strFullName;
+	var strCommand;
+	var i, j;
+	
+	strFullName = WScript.FullName;
+	i = strFullName.indexOf('.exe');
+	if (i != -1)
+	{
+		j = strFullName.lastIndexOf('\\', i);
+		if (j != 0)
+		{
+			strCommand = strFullName.slice(j+1, i);
+			if (strCommand.toLowerCase() == 'cscript')
+			{
+				return true
+			}
+		}
+	}
+	return false
+}
+
+function ShowUsage()
+{
+	var usage;
+	usage =  'Usage: cscript backup.js [/KEEP:number] [/VERBOSE] root mapfile\n';
+	usage += '\n';
+	usage += 'Options:\n'
+	usage += '  root          root directory for backups\n';
+	usage += '  mapfile       file that maps sources to destinations for a backup session\n';
+	usage += '  /KEEP:number  number of backups to keep; oldest will be deleted\n';
+	usage += '                (default is to keep everything)\n';
+	usage += '  /VERBOSE      display verbose output (default is to display nothing)\n';
+	usage += '\n';
+	usage += 'MapFile\n';
+	usage += '=======\n';
+	usage += '\n';
+	usage += 'Syntax:\n'
+	usage += '  The mapfile contains a list of backup source directories and\n';
+	usage += '  destination directories separated by bars (|).  The destination\n';
+	usage += '  directories are relative to the backup folder.  Source directories are\n';
+	usage += '  absolute paths.\n';
+	usage += '\n';
+	usage += 'Example:\n';
+	usage += '  C:\\web\\|web\\\n';
+	usage += '  C:\\temp\\|temp\\\n';
+	usage += '  D:\\data\\|data\\\n';
+	WScript.Echo(usage);
 }
