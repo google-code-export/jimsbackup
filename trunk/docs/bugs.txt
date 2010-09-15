@@ -20,3 +20,10 @@ of doing one call to ln.exe for the whole backup directory, loop over the
 ''destination directories'' in the backup map and create hardlinks only for
 these directories.  I assume that ones that do not exist will fail (as 
 expected), but the backup process should continue successfully.
+
+jimsbackup-0.2c1
+================
+
+0.2c1:1
+-------
+VERSION.TXT file not included in distribution.
