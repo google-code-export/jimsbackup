@@ -6,3 +6,8 @@ v0.1c2, 2010-07-28 -- Fixed some stuff.
 v0.1c3, 2010-08-09 -- Fixed a bug.
   Fixes: 1) bug 0.1c2:1 fixed.
 v0.1c4, 2010-08-11 -- Removed ln.exe from revision control.
+v0.2c1, 2010-09-14 -- Changed code language, added some features
+  Features: 1) Uses JScript instead of batch file now
+            2) Support for optional command line arguments
+v0.2c2, 2010-09-15 -- Fixed a bug.
+  Fixes: 1) bug 0.2c1:1 fixed.
