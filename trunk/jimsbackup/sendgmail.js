@@ -5,6 +5,7 @@
 /RT:email_address    reply-to email address
 /FROM:email_address  from email address
 /TO:email_address    to email address
+/ATTACH:filename     file to attach
 /BF:filename		 filename for message body
 */
 
@@ -43,7 +44,12 @@ email.Configuration.Fields.Item("http://schemas.microsoft.com/cdo/configuration/
 
 if (opts.Exists('USER'))
 	email.Configuration.Fields.Item("http://schemas.microsoft.com/cdo/configuration/sendusername") = opts('USER');
-
+else
+{
+	WScript.Echo('ERROR! Please provide a user name like -- /USER:email@gmail.com');
+	WScript.Quit(1);
+}
+	
 if (opts.Exists('PASS'))
 	email.Configuration.Fields.Item("http://schemas.microsoft.com/cdo/configuration/sendpassword") = opts('PASS');
 	
@@ -55,9 +61,22 @@ if (opts.Exists('RT'))
 	
 if (opts.Exists('FROM'))
 	email.From = opts('FROM');
+else
+	email.From = opts('USER');
 	
 if (opts.Exists('TO'))
 	email.To = opts('TO');
+else
+{
+	WScript.Echo('ERROR! Please provide a send-to address like -- /TO:email@domain.com');
+	WScript.Quit(1);
+}
+	
+if (opts.Exists('ATTACH'))
+{
+	WScript.Echo(fso.GetAbsolutePathName(opts('ATTACH')));
+	email.AddAttachment(fso.GetAbsolutePathName(opts('ATTACH')));
+}
 	
 if (opts.Exists('BF'))
 {
@@ -92,6 +111,7 @@ function ShowUsage()
 	usage += '  /RT:email_address    reply-to email address\n';
 	usage += '  /FROM:email_address  from email address\n';
 	usage += '  /TO:email_address    to email address\n';
+	usage += '  /ATTACH:filename     file to attach\n';
 	usage += '  /BF:filename         filename for message body\n';
 	WScript.Echo(usage);
 }
