@@ -11,3 +11,4 @@ v0.2c1, 2010-09-14 -- Changed code language, added some features
             2) Support for optional command line arguments
 v0.2c2, 2010-09-15 -- Fixed a bug.
   Fixes: 1) bug 0.2c1:1 fixed.
+0.3c1, 2010-09-23 -- Added attachment functionality to sendgmail.js
