@@ -27,3 +27,9 @@ jimsbackup-0.2c1
 0.2c1:1
 -------
 VERSION.TXT file not included in distribution.
+
+jimsbackup-0.3c1
+================
+
+0.3c1:1
+Attachments for emails sent using sendgmail.js are corrupted if the body is not set.
