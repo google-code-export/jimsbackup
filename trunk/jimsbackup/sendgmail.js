@@ -84,7 +84,13 @@ if (opts.Exists('BF'))
 	email.TextBody = f.ReadAll();
 	f.close();
 }
-
+else
+{
+	/* Body must be set or email attachments will get corrupted.  See:
+	http://thedailyreviewer.com/office/view/cdo-attachment-corrupted-106216793
+	*/
+	email.TextBody = '';
+}
 /* Use this to get body from standard input.
 var body = '';
 while (!WScript.StdIn.AtEndOfStream)
