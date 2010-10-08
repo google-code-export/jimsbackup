@@ -33,3 +33,10 @@ jimsbackup-0.3c1
 
 0.3c1:1
 Attachments for emails sent using sendgmail.js are corrupted if the body is not set.
+
+jimsbackup-0.3c2
+================
+
+0.3c2:1
+ln.exe doesn't work when the first backup mapping is for a folder.  The problem is that the
+root backup folder (i.e. bkp-20101008091600\) would not exist yet, and ln.exe doesn't like that.

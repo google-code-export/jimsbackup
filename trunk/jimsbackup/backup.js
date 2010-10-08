@@ -61,6 +61,7 @@ var consoleWidth = 80; // number of chars in width of console window
 var rootFolderPath;
 var mapFilePath;
 var mapFile;
+var bkFolder;
 var bkFolderName;
 var bkFolderPath;
 var latestFilePath; // path to latest.txt file in rootFolderPath
@@ -212,6 +213,13 @@ if (verbose)
 	WScript.Echo();
 	WScript.Echo('Starting backup operations...');
 }
+
+if (!fso.FolderExists(bkFolderPath))
+{
+	// Backup folder must exist for ln.exe to work!
+	bkFolder = fso.CreateFolder(bkFolderPath);
+}
+
 mapFile = fso.OpenTextFile(mapFilePath, ForReading, false);
 while (!mapFile.AtEndOfStream)
 {
