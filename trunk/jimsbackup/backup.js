@@ -74,6 +74,10 @@ var srcPath; // source file/directory of a backup operation
 var destPath; // destination of a backup operation relative to bkFolderPath
 var scriptFolderName = fso.GetParentFolderName(WScript.ScriptFullName);
 var verbose;
+var bkDrive;
+var bkDriveSpaceStart;
+var bkDriveSpaceEnd;
+
 if (opts.Exists('verbose'))
 	verbose = true;
 else
@@ -125,6 +129,9 @@ rootFolderPath = fso.GetAbsolutePathName(args(0));
 if (verbose)
 	WScript.Echo('Root Folder:  "' + rootFolderPath + '"');
 
+bkDrive = fso.GetDrive(fso.GetDriveName(fso.GetAbsolutePathName(rootFolderPath)));
+bkDriveSpaceStart = bkDrive.FreeSpace;
+	
 if (!fso.FolderExists(rootFolderPath))
 {
 	if (verbose)
@@ -316,6 +323,16 @@ if (opts.Exists('KEEP'))
 	if (verbose)
 		WScript.Echo();
 	removeOldest(rootFolderPath, parseInt(opts('KEEP')), verbose);
+}
+
+bkDriveSpaceEnd = bkDrive.FreeSpace;
+
+if (verbose)
+{
+	WScript.Echo();
+	WScript.Echo('Free space before backup: ' + bkDriveSpaceStart);
+	WScript.Echo('Free space after backup:  ' + bkDriveSpaceEnd);
+	WScript.Echo('Difference: ' + (bkDriveSpaceEnd - bkDriveSpaceStart));
 }
 
 function removeOldest(root, nKeep, verbose)
