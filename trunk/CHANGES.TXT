@@ -19,3 +19,4 @@ v0.2c2, 2010-09-15 -- Fixed a bug.
 0.5c1, 2010-11-04 -- Added a feature
   Features: 1) Added debugging option, some debugging info reporting
                to removeOldest sub-function.
+0.5c2, 2010-11-05 -- Fixed "Unterminated string constant" error.
