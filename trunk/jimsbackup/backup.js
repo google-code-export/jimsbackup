@@ -74,6 +74,7 @@ var srcPath; // source file/directory of a backup operation
 var destPath; // destination of a backup operation relative to bkFolderPath
 var scriptFolderName = fso.GetParentFolderName(WScript.ScriptFullName);
 var verbose;
+var debug;
 var bkDrive;
 var bkDriveSpaceStart;
 var bkDriveSpaceEnd;
@@ -82,6 +83,11 @@ if (opts.Exists('verbose'))
 	verbose = true;
 else
 	verbose = false;
+	
+if (opts.Exists('debug'))
+	debug = true;
+else
+	debug = false;
 
 if (!IsHostCscript())
 {
@@ -322,7 +328,7 @@ if (opts.Exists('KEEP'))
 {
 	if (verbose)
 		WScript.Echo();
-	removeOldest(rootFolderPath, parseInt(opts('KEEP')), verbose);
+	removeOldest(rootFolderPath, parseInt(opts('KEEP')), verbose, debug);
 }
 
 bkDriveSpaceEnd = bkDrive.FreeSpace;
@@ -335,12 +341,53 @@ if (verbose)
 	WScript.Echo('Difference: ' + (bkDriveSpaceEnd - bkDriveSpaceStart));
 }
 
-function removeOldest(root, nKeep, verbose)
+/*
+SUB-FUNCTIONS ------------------------------------------------------------------
+*/
+
+function removeOldest(root, nKeep, verbose, debug)
 {
+	if (debug)
+	{
+		WScript.Echo('Running sub-function removeOldest');
+		WScript.Echo('Arguments:
+		WScript.Echo('    root = ' + root);
+		WScript.Echo('    nKeep = ' + nKeep);
+		WScript.Echo('    verbose = ' + verbose);
+		WScript.Echo('    debug = ' + debug);
+		WScript.Echo();
+	}
 	var fso = new ActiveXObject('Scripting.FileSystemObject');
 	var folders = listBackups(root).sort();
+	if (debug)
+	{
+		WScript.Echo('folders.length = ' + folders.length);
+		for (var i in folders)
+		{
+			WScript.Echo('    ' + i + '. ' + folders[i]);
+		}
+		WScript.Echo();
+	}
 	var deleteFolders = folders.slice(0, folders.length-nKeep);
+	if (debug)
+	{
+		WScript.Echo('deleteFolders.length = ' + deleteFolders.length);
+		for (var i in deleteFolders)
+		{
+			WScript.Echo('    ' + i + '. ' + deleteFolders[i]);
+		}
+		WScript.Echo();
+	}
 	var keepFolders = folders.slice(folders.length-nKeep,folders.length);
+	if (debug)
+	{
+		WScript.Echo('keepFolders.length = ' + keepFolders.length);
+		for (var i in keepFolders)
+		{
+			WScript.Echo('    ' + i + '. ' + keepFolders[i]);
+		}
+		WScript.Echo();
+	}
 	var folderPath;
 	if (verbose)
 	{
@@ -603,6 +650,7 @@ function ShowUsage()
 	usage += '  /KEEP:number  number of backups to keep; oldest will be deleted\n';
 	usage += '                (default is to keep everything)\n';
 	usage += '  /VERBOSE      display verbose output (default is to display nothing)\n';
+	usage += '  /DEBUG        display debugging info'
 	usage += '\n';
 	usage += 'MapFile\n';
 	usage += '=======\n';
