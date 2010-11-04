@@ -350,7 +350,7 @@ function removeOldest(root, nKeep, verbose, debug)
 	if (debug)
 	{
 		WScript.Echo('Running sub-function removeOldest');
-		WScript.Echo('Arguments:
+		WScript.Echo('Arguments:');
 		WScript.Echo('    root = ' + root);
 		WScript.Echo('    nKeep = ' + nKeep);
 		WScript.Echo('    verbose = ' + verbose);
