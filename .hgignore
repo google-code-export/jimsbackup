@@ -8,3 +8,6 @@ syntax: glob
 # notepad++ backup files
 *.bak
 *.pyc
+
+# hg backup files
+*.orig
