@@ -448,6 +448,7 @@ function link(src, dest)
 	var msg;
 	var recurse;
 	var verbose;
+	var returncode;
 	
 	if (arguments.length >= 4)
 		verbose = arguments[3];
@@ -479,7 +480,13 @@ function link(src, dest)
 		WScript.Echo(msg);
 		WScript.Quit(1);
 	}
-	runCommand(cmd, verbose)
+	
+	returncode = runCommand(cmd, verbose);	
+	if (returncode != 0)
+	{
+		WScript.Echo('THERE WAS AN ERROR RUNNING LN.EXE (RETURN CODE: ' + returncode.toString() + '):');
+		WScript.Echo(cmd);
+	}
 }
 
 function synchronize(src, dest)
@@ -495,6 +502,7 @@ function synchronize(src, dest)
 	var msg;
 	var tempResult;
 	var verbose;
+	var returncode;
 	
 	if (arguments.length == 3)
 		verbose = arguments[2];
@@ -509,13 +517,13 @@ function synchronize(src, dest)
 		var tempFolderPath = wshShell.ExpandEnvironmentStrings('%TEMP%');
 		var tempFilePath = fso.BuildPath(tempFolderPath, fso.GetTempName());
 		var tempFile;
-		
+				
 		cmd = 'cmd /c robocopy ';
 		cmd += '"' + src + '" ';
 		cmd += '"' + dest + '" ';
 		cmd += '/MIR /LOG:';
 		cmd += '"' + tempFilePath + '"';
-		runCommand(cmd, verbose);
+		returncode = runCommand(cmd, verbose);
 		tempFile = fso.OpenTextFile(tempFilePath, ForReading);
 		while (!tempFile.AtEndOfStream)
 		{
@@ -526,6 +534,11 @@ function synchronize(src, dest)
 			}
 		}
 		tempFile.close();
+		if (returncode >= 8 & returncode <= 16)
+		{
+			WScript.Echo('THERE WAS AN ERROR RUNNING ROBOCOPY (RETURN CODE: ' + returncode.toString() + '):');
+			WScript.Echo(cmd);
+		}
 	}
 	else if (fso.FileExists(src))
 	{
@@ -551,7 +564,12 @@ function synchronize(src, dest)
 			cmd += ' "' + src + '"';
 			cmd += ' "' + dest + '"';
 			cmd += ' /V /H /R /K /Y /Z';
-			runCommand(cmd, verbose)
+			returncode = runCommand(cmd, verbose);
+			if (returncode != 0)
+			{
+				WScript.Echo('THERE WAS AN ERROR RUNNING XCOPY (RETURN CODE: ' + returncode.toString() + '):');
+				WScript.Echo(cmd);
+			}
 		}
 		else
 		{
@@ -609,11 +627,13 @@ function runCommand(cmd)
 		}
 	}
 	
-	if (oExec.ExitCode != 0)
-	{
-		WScript.Echo('There was an error running the following command:');
-		WScript.Echo(cmd);
-	}
+	return (oExec.ExitCode);
+	
+	// if (oExec.ExitCode != 0)
+	// {
+		// WScript.Echo('There was an error running the following command:');
+		// WScript.Echo(cmd);
+	// }
 }
 
 function IsHostCscript()
