@@ -25,3 +25,7 @@ v0.2c2, 2010-09-15 -- Fixed a bug.
                to jimsbackup, so you don't end up with a bunch of
                different versions installed.  You only need one.
             2) Changed subdirectory jimsbackup to scripts.
+0.6c1, 2010-11-12 -- Added some features
+  Features: 1) Added proper analysis of robocopy, xcopy, ln.exe error codes.
+               Search the log for the word "error" to see if there were any
+               errors during the backup.
