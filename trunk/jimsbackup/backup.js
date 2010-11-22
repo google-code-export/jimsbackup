@@ -368,7 +368,18 @@ function removeOldest(root, nKeep, verbose, debug)
 		}
 		WScript.Echo();
 	}
-	var deleteFolders = folders.slice(0, folders.length-nKeep);
+	
+	if (folders.length <= nKeep)
+	{
+		var deleteFolders = new Array();
+		var keepFolders = folders;
+	}
+	else
+	{
+		var deleteFolders = folders.slice(0, folders.length-nKeep);
+		var keepFolders = folders.slice(folders.length-nKeep,folders.length);
+	}
+		
 	if (debug)
 	{
 		WScript.Echo('deleteFolders.length = ' + deleteFolders.length);
@@ -378,7 +389,7 @@ function removeOldest(root, nKeep, verbose, debug)
 		}
 		WScript.Echo();
 	}
-	var keepFolders = folders.slice(folders.length-nKeep,folders.length);
+	
 	if (debug)
 	{
 		WScript.Echo('keepFolders.length = ' + keepFolders.length);

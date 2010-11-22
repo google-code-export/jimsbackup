@@ -29,3 +29,6 @@ v0.2c2, 2010-09-15 -- Fixed a bug.
   Features: 1) Added proper analysis of robocopy, xcopy, ln.exe error codes.
                Search the log for the word "error" to see if there were any
                errors during the backup.
+0.6c2, 2010-11-22 -- Fixed a bug
+  Fixes:  1) bug 0.6c1:1 fixed.
+  Features: 1) Updated readme to match google code page.

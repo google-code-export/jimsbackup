@@ -1,59 +1,42 @@
 jimsBackup
-**********
+==========
 
-On a \*nix system, the best backup solution is to use rsync with the 
---link-dest option.  This is described here 
-(http://www.mikerubel.org/computers/rsync_snapshots/) and here 
-(http://blog.interlinked.org/tutorials/rsync_time_machine.html).
+installation
+------------
 
-On Windows, you can use rsync through cygwin, but rsync doesn't handle file
-attributes on Windows well.  So you could run rsync, then use the Microsoft tool
-robocopy to just update the file attributes, but I would rather use parts that
-are designed to work well with Windows.
+1. Download and install the 
+   `Windows 2003 Resource Kit Tools <http://www.microsoft.com/downloads/en/details.aspx?FamilyID=9d467a69-57ff-4ae7-96ee-b18c4790cffd&displaylang=en>`_.
+   Make sure that the installation directory is on your 
+   `search path <http://ss64.com/nt/path.html>`_.
+2. Download and extract `ln.zip <http://schinagl.priv.at/nt/ln/ln.html>`_ to 
+   your hard drive. Make sure that the installation directory is on your 
+   `search path <http://ss64.com/nt/path.html>`_.
+3. Extract the 
+   `latest <http://code.google.com/p/jimsbackup/downloads/list?q=label:Featured>`_
+   distribution of jimsbackup to your hard drive.
 
-jimsBackup is a script that utilizes tools that already exist, are free, and are
-known to work well on Windows.  These are ln.exe for creating hard links, and
-robocopy.exe and xcopy.exe for synchronizing files.  The script is written in
-JScript, which will just work on any Windows system, and doesn't require you to
-install a script interpreter.  Also included is a simple script for emailing 
-backup logs to the backup administrator.
+usage
+-----
 
-Summary of functionality
-========================
+For the following we'll assume you installed jimsbackup to ``C:\jimsbackup``, 
+and you want backups to be saved to ``C:\backup``.
 
-Make backups with backup.js
----------------------------
+Create a backup map file (``C:\backup\backup-map.txt``) that will map backup
+sources to destinations.  The file should have one line for each backup
+operation.  The lines should contain the absolute path of a file or folder on
+your hard drive that you wish to backup, followed by a vertical bar (|),
+followed by the relative path of the destination (relative to the backup
+folder).  Here is an example:
 
-The backup script can be run any number of times to create a new mirror of the
-backup sources.  The new mirror is stored in a new folder named bkp-<timestamp>.
-First the script uses the ln.exe tool to recreate the directory structure of the
-most recent backup, then create hard-links to each of the files in the most
-recent backup.  Then robocopy is used to compare the new backup with the
-backup directories.  Here, xcopy is used if the backup source is a file instead
-of a folder.  Only changed files will be copied to the new backup.  Otherwise, 
-the files will be left untouched.
+::
 
-Run backup.js automatically
-----------------------------
+  C:\Documents and Settings\bob\My Documents|Documents and Settings\bob\My Documents
+  C:\Documents and Settings\bob\Desktop|Documents and Settings\bob\Desktop
 
-Use Windows task scheduler to have the backups run on a regular basis.
+The following command will generate a backup.  Repeating the command will 
+generate new backups.  After 20 backups have accumulated creating a new backup
+will also delete the oldest backup.
 
-Why it's awesome
-================
+::
 
-Because hard-links are used, this backup script is very efficient with
-space, and you should be able to keep many backup folders around.  ln.exe, 
-robocopy, and xcopy were built for Windows, so they are fast.  It should only
-take a couple of minutes to do backups of several gigabytes of data after 
-the initial backup is created.  The backup folders are real mirror copies of the
-data at a specific instant in time, they are not stored in a wierd proprietary
-format.  As such, they can be browsed, searched, and copied like any other 
-folder in Windows using any tools you like to use. 
-
-Special thanks to
-=================
-
- - Hermann Schinagl -- for his ln.exe tool 
-   (http://schinagl.priv.at/nt/ln/ln.html).  It's better than the 
-   Microsoft tool fsutil, since it can make hard links on network 
-   drives.
+  cscript C:\jimsbackup\scripts\backup.js /KEEP:20 /VERBOSE C:\backup\ C:\backup\backup-map.txt>C:\backup\backup.log
