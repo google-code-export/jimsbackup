@@ -40,3 +40,10 @@ jimsbackup-0.3c2
 0.3c2:1
 ln.exe doesn't work when the first backup mapping is for a folder.  The problem is that the
 root backup folder (i.e. bkp-20101008091600\) would not exist yet, and ln.exe doesn't like that.
+
+jimsbackup-0.6c1
+================
+
+0.6c1:1
+If the value provided for /KEEP is greater than the number of existing backups, some false
+information will be provided in the log about what will be deleted and what will be kept.
