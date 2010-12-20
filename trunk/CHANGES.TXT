@@ -32,3 +32,7 @@ v0.2c2, 2010-09-15 -- Fixed a bug.
 0.6c2, 2010-11-22 -- Fixed a bug
   Fixes:  1) bug 0.6c1:1 fixed.
   Features: 1) Updated readme to match google code page.
+0.7c3, 2010-12-20 -- Added a feature
+  Features: 1) Added a recursive file delete function.  Using this function
+               for deleting old backups, since it prints the name of each
+               file/folder immediately after it has been deleted.
