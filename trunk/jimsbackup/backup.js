@@ -422,9 +422,8 @@ function removeOldest(root, nKeep, verbose, debug)
 	for (var i in deleteFolders)
 	{
 		folderPath = fso.BuildPath(root, deleteFolders[i]);
-		fso.DeleteFolder(folderPath, true);
-		if (verbose)
-			WScript.Echo('  deleted "' + folderPath + '"');
+		recursiveDelete(folderPath);
+		WScript.Echo();
 	}
 }
 
@@ -668,6 +667,32 @@ function IsHostCscript()
 		}
 	}
 	return false
+}
+
+function recursiveDelete(root)
+{
+// Inputs:
+//   root -- absolute folder pathname
+
+	var fso = new ActiveXObject("Scripting.FileSystemObject");
+	var fileList;
+	var folderList;
+	
+	folderList = listFolders(root);
+	for (i in folderList)
+	{
+		recursiveDelete(fso.BuildPath(root, folderList[i]));
+	}
+	
+	fileList = listFiles(root);
+	for (i in fileList)
+	{
+		fso.DeleteFile(fso.BuildPath(root, fileList[i]), true);
+		WScript.Echo('DELETED FILE   ' + fso.BuildPath(root, fileList[i]));
+	}
+	
+	fso.DeleteFolder(root, true);
+	WScript.Echo('DELETED FOLDER ' + root);
 }
 
 function ShowUsage()
