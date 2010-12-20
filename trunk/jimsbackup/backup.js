@@ -669,6 +669,72 @@ function IsHostCscript()
 	return false
 }
 
+function listFiles(root)
+{
+// Inputs:
+//   root      -- absolute folder pathname
+//   [pattern] -- optional file name, can use wildcards (*)
+
+	var fso = new ActiveXObject("Scripting.FileSystemObject");
+	var wshShell = new ActiveXObject("WScript.Shell");
+
+	var pattern
+	if (arguments.length >= 2)
+		pattern = arguments[1];
+	else
+		pattern = '';
+		
+	var cmd = 'cmd /C dir /A:-D /B "' + fso.BuildPath(root, pattern) + '"';
+	var oExec = wshShell.Exec(cmd);
+	var fileList = new Array();
+	var line;
+	
+	while (!oExec.StdOut.AtEndOfStream)
+	{
+		line = oExec.StdOut.ReadLine();
+		if (line == 'File Not Found')
+		{
+			return fileList;
+		}
+		fileList[fileList.length] = line;
+	}
+	
+	return fileList
+}
+
+function listFolders(root)
+{
+// Inputs:
+//   root      -- absolute folder pathname
+//   [pattern] -- optional folder name, can use wildcards (*)
+
+	var fso = new ActiveXObject("Scripting.FileSystemObject");
+	var wshShell = new ActiveXObject("WScript.Shell");
+
+	var pattern
+	if (arguments.length >= 2)
+		pattern = arguments[1];
+	else
+		pattern = '';
+		
+	var cmd = 'cmd /C dir /A:D /B "' + fso.BuildPath(root, pattern) + '"';
+	var oExec = wshShell.Exec(cmd);
+	var folderList = new Array();
+	var line;
+	
+	while (!oExec.StdOut.AtEndOfStream)
+	{
+		line = oExec.StdOut.ReadLine();
+		if (line == 'File Not Found')
+		{
+			return folderList;
+		}
+		folderList[folderList.length] = line;
+	}
+	
+	return folderList
+}
+
 function recursiveDelete(root)
 {
 // Inputs:

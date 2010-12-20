@@ -47,3 +47,9 @@ jimsbackup-0.6c1
 0.6c1:1
 If the value provided for /KEEP is greater than the number of existing backups, some false
 information will be provided in the log about what will be deleted and what will be kept.
+
+jimsbackup-0.7c1
+================
+
+0.7c1:1
+Missing functions listFiles, listFolders in backup.js.
