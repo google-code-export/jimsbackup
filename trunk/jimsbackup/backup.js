@@ -257,6 +257,10 @@ while (!mapFile.AtEndOfStream)
 			msg += '"' + linkDest + '"...';
 			if (verbose)
 				WScript.Echo(msg);
+			
+			if (!fso.FolderExists(destPath))
+				createFolder(destPath)
+			
 			link(linkDest, destPath, true, verbose);
 		}
 		else if (fso.FileExists(linkDest))
@@ -267,6 +271,10 @@ while (!mapFile.AtEndOfStream)
 			msg += '"' + linkDest + '"...';
 			if (verbose)
 				WScript.Echo(msg);
+				
+			if (!fso.FolderExists(fso.GetParentFolderName(destPath)))
+				createFolder(fso.GetParentFolderName(destPath))
+				
 			link(linkDest, destPath, false, verbose);
 		}
 		else
@@ -531,7 +539,7 @@ function synchronize(src, dest)
 		cmd = 'cmd /c robocopy ';
 		cmd += '"' + src + '" ';
 		cmd += '"' + dest + '" ';
-		cmd += '/MIR /LOG:';
+		cmd += '/MIR /R:0 /W:1 /LOG:';
 		cmd += '"' + tempFilePath + '"';
 		returncode = runCommand(cmd, verbose);
 		tempFile = fso.OpenTextFile(tempFilePath, ForReading);
@@ -759,6 +767,36 @@ function recursiveDelete(root)
 	
 	fso.DeleteFolder(root, true);
 	WScript.Echo('DELETED FOLDER ' + root);
+}
+
+function logdate()
+// return date/time formatted nicely for a log
+// i.e.  01/21/2011 13:21:15
+// i.e.  01/21/2011 13:21:15 -- Saving data to file.
+{
+	var d = new Date();
+	var MM = ("0" + (d.getMonth() + 1).toString()).slice(-2);
+	var DD = ("0" + d.getDate().toString()).slice(-2);
+	var YYYY = ("000" + d.getYear().toString()).slice(-4);
+	var hh = ("0" + d.getHours().toString()).slice(-2);
+	var mm = ("0" + d.getMinutes().toString()).slice(-2);
+	var ss = ("0" + d.getSeconds().toString()).slice(-2);
+	
+	return MM + "/" + DD + "/" + YYYY + " " + hh + ":" + mm + ":" + ss
+}
+
+function createFolder(folder)
+{
+	WScript.Echo(folder)
+	var fso = new ActiveXObject("Scripting.FileSystemObject");
+	
+	if (fso.FolderExists(folder))
+		return
+	else
+	{
+		createFolder(fso.GetParentFolderName(folder))
+		fso.CreateFolder(folder)
+	}	
 }
 
 function ShowUsage()
