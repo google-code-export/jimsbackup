@@ -53,3 +53,9 @@ jimsbackup-0.7c1
 
 0.7c1:1
 Missing functions listFiles, listFolders in backup.js.
+
+jimsbackup-0.7c2
+================
+
+0.7c2:1
+Similar to bug 0.3c2:1, except subdirectories need to be created before ln.exe can run.
